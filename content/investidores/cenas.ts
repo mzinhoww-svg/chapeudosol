@@ -5,7 +5,7 @@
 
 export type Lang = 'pt' | 'en';
 export type L10n = { pt: string; en: string };
-export type Estado = 'existente' | 'desenvolvimento' | 'previsto' | 'estudo';
+export type Estado = 'existente' | 'desenvolvimento' | 'estudo';
 export type Horizonte = 0 | 1 | 2; // Hoje, 2027, 2031
 
 export const EN_RASCUNHO = true;
@@ -21,36 +21,70 @@ export const NOTA_HORIZONTES: L10n = {
   en: '2027 and 2031 are management planning horizons, not delivery dates or projected results.',
 };
 
+// Cores pensadas para leitura sobre o satélite. A legenda usa as mesmas cores do mapa.
 export const ESTADOS: Record<Estado, { cor: string; rotulo: L10n }> = {
-  existente: { cor: '#087E73', rotulo: { pt: 'Existente', en: 'Existing' } },
+  existente: { cor: '#1FA894', rotulo: { pt: 'Existente', en: 'Existing' } },
   desenvolvimento: { cor: '#F39224', rotulo: { pt: 'Em desenvolvimento', en: 'In development' } },
-  previsto: { cor: '#2F5D8A', rotulo: { pt: 'Previsto', en: 'Planned' } },
-  estudo: { cor: '#2F5D8A', rotulo: { pt: 'Estudo conceitual, sem aprovação', en: 'Conceptual study, not approved' } },
+  estudo: { cor: '#6F9FDB', rotulo: { pt: 'Estudo conceitual, sem aprovação', en: 'Conceptual study, not approved' } },
 };
 
-const E: Estado = 'existente', D: Estado = 'desenvolvimento', P: Estado = 'previsto', S: Estado = 'estudo';
-type Trio = [Estado, Estado, Estado];
-const EXISTENTES: Trio = [E, E, E];
-const OBRAS: Trio = [D, D, E];
-const PARQUE: Trio = [D, D, P];
-const LOTES: Trio = [S, S, P];
+// Estado de cada ativo. Não muda com a linha do tempo: obras públicas não são projetadas e lotes seguem como estudo.
+// Ativos fora desta lista aparecem neutros.
+const E: Estado = 'existente', D: Estado = 'desenvolvimento', S: Estado = 'estudo';
+export const ESTADO: Record<string, Estado> = {
+  IFMT: E, GEN: E, FLOR: E, 'CDS-BAIRRO': E, FLM: E, RDP: E, MDP: E, 'LAG-N': E, 'LAG-S': E, BR364: E, 'AV-CDS': E,
+  CN: D, 'BR364-C': D, 'CAMPUS-VIAS': D, 'PQT-OSM': D, UNEMAT: D, 'UFMT-OSM': D, 'UFMT-PLAN': D,
+  'LOT-A': S, 'LOT-B': S, 'LOT-C': S, 'PQT-PLAN': S, 'LB-1': S, 'LB-2': S, 'LB-3': S, 'AD-I': S,
+};
+export const SEMPRE_ESTUDO = new Set(Object.keys(ESTADO).filter(id => ESTADO[id] === 'estudo'));
 
-// Estado de cada ativo em Hoje · 2027 · 2031. Ativos fora desta lista aparecem neutros.
-export const LINHA_DO_TEMPO: Record<string, Trio> = {
-  IFMT: EXISTENTES, GEN: EXISTENTES, FLOR: EXISTENTES, 'CDS-BAIRRO': EXISTENTES, FLM: EXISTENTES, RDP: EXISTENTES, MDP: EXISTENTES,
-  'LAG-N': EXISTENTES, 'LAG-S': EXISTENTES, BR364: EXISTENTES, 'AV-CDS': EXISTENTES,
-  CN: OBRAS, 'BR364-C': OBRAS, 'CAMPUS-VIAS': OBRAS,
-  'PQT-OSM': PARQUE, UNEMAT: PARQUE, 'UFMT-OSM': PARQUE, 'UFMT-PLAN': PARQUE,
-  'LOT-A': LOTES, 'LOT-B': LOTES, 'LOT-C': LOTES, 'PQT-PLAN': LOTES, 'LB-1': LOTES, 'LB-2': LOTES, 'LB-3': LOTES, 'AD-I': LOTES,
+// Metas de gestão na linha do tempo, desenhadas sobre as quadras de content/investidores/volumes.ts.
+// 2027: 1º contrato de renda (BTS ou metade da 1ª quadra pré-locada), só a área no chão.
+// 2031: série de quadras de galpões, em volume. Tudo ilustrativo, sem projeto nem aprovação.
+export type Meta = { quadras: number[]; volume: boolean; rotulo: L10n };
+export const METAS: Record<Horizonte, Meta | null> = {
+  0: null,
+  1: { quadras: [1], volume: false, rotulo: { pt: 'Meta 2027 · 1º contrato de renda na 1ª quadra', en: '2027 target · first income contract on block 1' } },
+  2: { quadras: [1, 2], volume: true, rotulo: { pt: 'Meta 2031 · série de quadras de galpões', en: '2031 target · series of warehouse blocks' } },
+};
+export const META: { cor: string; rotulo: L10n; sufixo: L10n } = {
+  cor: '#D6E6FA',
+  rotulo: { pt: 'Meta de gestão, ilustrativa', en: 'Management target, illustrative' },
+  sufixo: { pt: 'ilustrativo', en: 'illustrative' },
 };
 
-// Ativos que são sempre "estudo conceitual, sem aprovação", em qualquer horizonte.
-export const SEMPRE_ESTUDO = new Set(['LOT-A', 'LOT-B', 'LOT-C', 'PQT-PLAN', 'LB-1', 'LB-2', 'LB-3', 'AD-I']);
+// Rótulos no mapa. Ativos de estudo ganham o sufixo "estudo conceitual".
+export const ROTULOS: Record<string, L10n> = {
+  'LOT-A': { pt: 'Lotes empresariais', en: 'Business lots' },
+  'LOT-B': { pt: 'Lotes empresariais', en: 'Business lots' },
+  'LOT-C': { pt: 'Lotes empresariais', en: 'Business lots' },
+  'PQT-PLAN': { pt: 'Quadras do Parque na planta', en: 'Park blocks in the plan' },
+  'LB-1': { pt: 'Landbank', en: 'Landbank' },
+  'LB-2': { pt: 'Landbank', en: 'Landbank' },
+  'AD-I': { pt: 'Área desmembrada I', en: 'Subdivided area I' },
+  GEN: { pt: 'Parque Genebra', en: 'Parque Genebra' },
+  'LAG-N': { pt: 'Lagoas', en: 'Lakes' },
+  CN: { pt: 'Contorno Norte', en: 'Contorno Norte' },
+  'BR364-C': { pt: 'BR-364 · trecho em obras', en: 'BR-364 · section under works' },
+  BR364: { pt: 'BR-364 / BR-163', en: 'BR-364 / BR-163' },
+  'UFMT-OSM': { pt: 'Campus UFMT Várzea Grande', en: 'UFMT Várzea Grande campus' },
+  'PQT-OSM': { pt: 'Parque Tecnológico Mato Grosso', en: 'Mato Grosso Technology Park' },
+  UNEMAT: { pt: 'Unemat', en: 'Unemat' },
+  IFMT: { pt: 'IFMT Várzea Grande', en: 'IFMT Várzea Grande' },
+  FLOR: { pt: 'Condomínio Florença', en: 'Florença community' },
+  'CDS-BAIRRO': { pt: 'Loteamento Chapéu do Sol', en: 'Chapéu do Sol subdivision' },
+  FLM: { pt: 'Florais da Mata', en: 'Florais da Mata' },
+  RDP: { pt: 'Recanto do Pari', en: 'Recanto do Pari' },
+  MDP: { pt: 'Mirante do Pari', en: 'Mirante do Pari' },
+  'CAMPUS-VIAS': { pt: 'Vias do Parque e do campus', en: 'Park and campus roads' },
+};
+export const SUFIXO_ESTUDO: L10n = { pt: 'estudo conceitual', en: 'conceptual study' };
 
 export type Etiqueta = { pt: string; en: string };
 const T = {
   empresa: { pt: 'dado da empresa', en: 'company data' },
   meta: { pt: 'meta de gestão', en: 'management target' },
+  levantar: { pt: 'a levantar', en: 'to be surveyed' },
   iNFRA: { pt: 'Agência iNFRA, 31/10/2025', en: 'Agência iNFRA, 10/31/2025' },
   vgn: { pt: 'VG Notícias, 18/03/2026', en: 'VG Notícias, 03/18/2026' },
   pvg0321: { pt: 'Prefeitura de VG, 21/03/2026', en: 'Várzea Grande City Hall, 03/21/2026' },
@@ -71,16 +105,18 @@ const T = {
 export type ItemPainel = {
   rotulo: L10n;
   detalhe: L10n;
-  etiqueta: Etiqueta;
+  etiqueta?: Etiqueta;
   ativo?: string; // id com coordenada nos dados (public/mapa/data)
   semCoordenada?: boolean; // investimento público sem coordenada nos dados: mostra "localização a confirmar"
 };
 
 export type Cena = {
   id: string;
-  camera: { center: [number, number]; zoom: number; pitch?: number; bearing?: number };
+  // pitch = inclinação em graus (0 = visto de cima); bearing = rumo em graus (0 = norte para cima).
+  camera: { center: [number, number]; zoom: number; pitch: number; bearing: number };
   destaque: string[];
   estudoConceitual?: boolean;
+  linhaDoTempo?: boolean; // mostra Hoje · 2027 · 2031 e as metas de gestão (volumes ilustrativos)
   imagem?: string;
   titulo: L10n;
   texto: L10n;
@@ -93,8 +129,8 @@ export const LOCALIZACAO_A_CONFIRMAR: L10n = { pt: 'localização a confirmar', 
 export const CENAS: Cena[] = [
   {
     id: 'territorio',
-    camera: { center: [-56.2, -15.585], zoom: 12.4 },
-    destaque: ['LOT-A', 'LOT-B', 'LOT-C', 'PQT-PLAN', 'LB-1', 'LB-2', 'GEN', 'LAG-N'],
+    camera: { center: [-56.205, -15.582], zoom: 12.75, pitch: 52, bearing: -28 },
+    destaque: ['LOT-B', 'LOT-A', 'LOT-C', 'PQT-PLAN', 'LB-1', 'LB-2', 'GEN', 'LAG-N'],
     estudoConceitual: true,
     titulo: { pt: 'O território', en: 'The territory' },
     texto: {
@@ -105,12 +141,12 @@ export const CENAS: Cena[] = [
   },
   {
     id: 'acesso',
-    camera: { center: [-56.2, -15.58], zoom: 12.2 },
+    camera: { center: [-56.207, -15.583], zoom: 12.35, pitch: 50, bearing: 22 },
     destaque: ['CN', 'BR364-C', 'BR364'],
     titulo: { pt: 'Como se chega', en: 'How to get there' },
     texto: {
-      pt: 'O Contorno Norte tem 52 km, com o Lote 1 (21,5 km) em obras e R$ 540 mi no Novo PAC; 8 km ficam dentro da área. Via de acesso de 1,6 km licitada e ponte para Santa Rosa anunciada.',
-      en: 'Contorno Norte is 52 km, with Lot 1 (21.5 km) under construction and R$ 540 mn from Novo PAC; 8 km lie inside the area. 1.6 km access road tendered; Santa Rosa bridge announced.',
+      pt: 'Contorno Norte: 52 km, Lote 1 (21,5 km) em obras e R$ 540 mi no Novo PAC; 8 km ficam na área. Via de acesso de 1,6 km licitada; licitação da ponte para Santa Rosa anunciada.',
+      en: 'Contorno Norte: 52 km, Lot 1 (21.5 km) under construction and R$ 540 mn in Novo PAC; 8 km lie inside the area. 1.6 km access road tendered; Santa Rosa bridge tender announced.',
     },
     etiquetas: [T.iNFRA, T.vgn, T.pvg0321, T.empresa],
     painel: [
@@ -121,7 +157,7 @@ export const CENAS: Cena[] = [
   },
   {
     id: 'publicos',
-    camera: { center: [-56.19, -15.59], zoom: 12.6 },
+    camera: { center: [-56.193, -15.589], zoom: 12.9, pitch: 54, bearing: 38 },
     destaque: ['UFMT-OSM', 'CN'],
     titulo: { pt: 'Investimentos públicos ao redor', en: 'Public investment nearby' },
     texto: {
@@ -138,7 +174,7 @@ export const CENAS: Cena[] = [
   },
   {
     id: 'parque',
-    camera: { center: [-56.195, -15.583], zoom: 13.3 },
+    camera: { center: [-56.191, -15.588], zoom: 13.25, pitch: 56, bearing: 42 },
     destaque: ['PQT-OSM', 'UNEMAT', 'UFMT-OSM', 'IFMT'],
     titulo: { pt: 'Parque Tecnológico e universidades', en: 'Technology Park and universities' },
     texto: {
@@ -147,44 +183,45 @@ export const CENAS: Cena[] = [
     },
     etiquetas: [T.parque, T.camara, T.tela],
     painel: [
-      { rotulo: { pt: 'Parque Tecnológico Mato Grosso', en: 'Mato Grosso Technology Park' }, detalhe: { pt: 'Gestão do Parque Tecnológico de São José dos Campos · cerca de 50 empresas interessadas (número agregado, sem nomes)', en: 'Managed by the São José dos Campos Technology Park · about 50 interested companies (aggregate figure, no names)' }, etiqueta: T.parque, ativo: 'PQT-OSM' },
+      { rotulo: { pt: 'Parque Tecnológico Mato Grosso', en: 'Mato Grosso Technology Park' }, detalhe: { pt: 'Gestão do Parque Tecnológico de São José dos Campos · cerca de 50 empresas interessadas', en: 'Managed by the São José dos Campos Technology Park · about 50 interested companies' }, etiqueta: T.parque, ativo: 'PQT-OSM' },
       { rotulo: { pt: 'Área planejada', en: 'Planned area' }, detalhe: { pt: '80 ha planejados, 64 ha para empresas privadas em área do Estado', en: '80 ha planned, 64 ha for private companies on State land' }, etiqueta: T.almt },
       { rotulo: { pt: 'IFMT Várzea Grande', en: 'IFMT Várzea Grande' }, detalhe: { pt: 'Sede própria desde 04/02/2026 · 12 cursos · 1,6 mil alunos', en: 'Own campus since 02/04/2026 · 12 courses · 1,600 students' }, etiqueta: T.tela, ativo: 'IFMT' },
     ],
   },
   {
     id: 'logistica',
-    camera: { center: [-56.12, -15.6], zoom: 10.7 },
+    camera: { center: [-56.165, -15.6], zoom: 11.45, pitch: 42, bearing: 8 },
     destaque: ['BR364', 'CN', 'BR364-C'],
     titulo: { pt: 'Logística da Grande Cuiabá', en: 'Greater Cuiabá logistics' },
     texto: {
       pt: 'Nas 9 praças da concessão BR-163/MT e MT-407, o tráfego foi de 87 mi para 115 mi de veículos equivalentes entre 2016 e 2023, cerca de 90% pesados. Aluguel e vacância em Cuiabá: a levantar.',
       en: 'At the 9 toll plazas of the BR-163/MT and MT-407 concession, traffic grew from 87 mn to 115 mn equivalent vehicles between 2016 and 2023, about 90% heavy. Rent and vacancy in Cuiabá: to be surveyed.',
     },
-    etiquetas: [T.moodys, T.log, T.rzzr],
+    etiquetas: [T.moodys, T.levantar],
     painel: [
       { rotulo: { pt: 'Tráfego na concessão', en: 'Concession traffic' }, detalhe: { pt: '115 mi de veículos equivalentes em 2023 contra 87 mi em 2016', en: '115 mn equivalent vehicles in 2023 vs 87 mn in 2016' }, etiqueta: T.moodys },
       { rotulo: { pt: 'LOG Cuiabá', en: 'LOG Cuiabá' }, detalhe: { pt: '38,6 mil m² entregues no 1º trimestre de 2025', en: '38,600 m² delivered in Q1 2025' }, etiqueta: T.log },
       { rotulo: { pt: 'RZZR11', en: 'RZZR11' }, detalhe: { pt: 'CDs sob medida em Cuiabá, vacância zero', en: 'Build-to-suit distribution centers in Cuiabá, zero vacancy' }, etiqueta: T.rzzr },
       { rotulo: { pt: 'GGRC11', en: 'GGRC11' }, detalhe: { pt: 'Contrato atípico até 2037', en: 'Atypical lease until 2037' }, etiqueta: T.ggrc },
-      { rotulo: { pt: 'Aluguel e vacância em Cuiabá', en: 'Rent and vacancy in Cuiabá' }, detalhe: { pt: 'A levantar', en: 'To be surveyed' }, etiqueta: T.meta },
+      { rotulo: { pt: 'Aluguel e vacância em Cuiabá', en: 'Rent and vacancy in Cuiabá' }, detalhe: { pt: 'Pesquisa de mercado pendente', en: 'Market survey pending' }, etiqueta: T.levantar },
     ],
   },
   {
     id: 'galpoes',
-    camera: { center: [-56.205, -15.577], zoom: 12.9 },
-    destaque: ['LOT-A', 'LOT-B', 'LOT-C'],
+    camera: { center: [-56.2004, -15.5702], zoom: 15.35, pitch: 62, bearing: 18 },
+    destaque: ['LOT-B', 'LOT-A', 'LOT-C'],
     estudoConceitual: true,
+    linhaDoTempo: true,
     titulo: { pt: 'Galpões para locar', en: 'Warehouses for lease' },
     texto: {
-      pt: 'Estudo conceitual, sem aprovação: quadras de galpões de 50 mil m². A obra só começa com BTS assinado ou 50% pré-locado, em SPE por fase de renda.',
-      en: 'Conceptual study, not approved: warehouse blocks of 50,000 m². Construction only starts with a signed BTS or 50% pre-leased, in an SPE per income phase.',
+      pt: 'Estudo conceitual, sem aprovação: quadras de galpões de 50 mil m². Obra só com BTS assinado ou 50% pré-locado, em SPE por fase de renda. Meta de gestão: 1º contrato em 2027 e série de quadras até 2031.',
+      en: 'Conceptual study, not approved: warehouse blocks of 50,000 m². Construction only with a signed BTS or 50% pre-leased, in an SPE per income phase. Management target: first contract in 2027 and a series of blocks by 2031.',
     },
     etiquetas: [T.meta],
   },
   {
     id: 'residencial',
-    camera: { center: [-56.182, -15.598], zoom: 13.6 },
+    camera: { center: [-56.176, -15.594], zoom: 13.55, pitch: 56, bearing: -22 },
     destaque: ['GEN', 'FLOR', 'CDS-BAIRRO', 'FLM', 'RDP', 'MDP'],
     titulo: { pt: 'Residencial e comercial', en: 'Residential and commercial' },
     texto: {
@@ -199,7 +236,7 @@ export const CENAS: Cena[] = [
   },
   {
     id: 'ecossistema',
-    camera: { center: [-56.195, -15.585], zoom: 12.4 },
+    camera: { center: [-56.196, -15.584], zoom: 12.7, pitch: 62, bearing: 64 },
     destaque: [],
     imagem: '/investidores/ecossistema',
     titulo: { pt: 'Ecossistema', en: 'Ecosystem' },
@@ -211,19 +248,20 @@ export const CENAS: Cena[] = [
   },
   {
     id: 'linha-do-tempo',
-    camera: { center: [-56.195, -15.588], zoom: 12.5 },
-    destaque: ['CN', 'BR364-C', 'CAMPUS-VIAS', 'PQT-OSM', 'UNEMAT', 'UFMT-OSM', 'IFMT', 'GEN', 'FLOR', 'LOT-A', 'LOT-B', 'LOT-C', 'PQT-PLAN', 'AD-I'],
+    camera: { center: [-56.1995, -15.5745], zoom: 14.15, pitch: 60, bearing: -18 },
+    destaque: ['LOT-B', 'PQT-OSM', 'UNEMAT', 'CN', 'CAMPUS-VIAS', 'UFMT-OSM', 'PQT-PLAN', 'LOT-A', 'LOT-C', 'BR364-C', 'IFMT', 'GEN', 'FLOR', 'AD-I'],
     estudoConceitual: true,
+    linhaDoTempo: true,
     titulo: { pt: 'Hoje, 2027 e 2031', en: 'Today, 2027 and 2031' },
     texto: {
-      pt: 'Use a linha do tempo para ver cada ativo mudar entre existente, em desenvolvimento e previsto. Lotes e galpões seguem como estudo conceitual, sem aprovação. Metas são objetivos de gestão, não promessa de resultado.',
-      en: 'Use the timeline to see each asset move between existing, in development and planned. Lots and warehouses remain a conceptual study, not approved. Targets are management objectives, not a promise of results.',
+      pt: 'A linha do tempo mostra metas de gestão: 1º contrato de renda em 2027 e série de quadras de galpões em 2031, em volumes ilustrativos. Obras públicas seguem em desenvolvimento e lotes, como estudo conceitual.',
+      en: 'The timeline shows management targets: first income contract in 2027 and a series of warehouse blocks by 2031, as illustrative volumes. Public works remain in development and lots remain a conceptual study.',
     },
     etiquetas: [T.meta],
   },
   {
     id: 'proximos-passos',
-    camera: { center: [-56.195, -15.585], zoom: 12.2 },
+    camera: { center: [-56.195, -15.583], zoom: 12.5, pitch: 48, bearing: -12 },
     destaque: [],
     titulo: { pt: 'Próximos passos', en: 'Next steps' },
     texto: {
@@ -232,11 +270,11 @@ export const CENAS: Cena[] = [
     },
     etiquetas: [T.meta],
     painel: [
-      { rotulo: { pt: '1 · Conversa', en: '1 · Conversation' }, detalhe: { pt: 'Apresentar a tese e tirar dúvidas', en: 'Walk through the thesis and answer questions' }, etiqueta: T.meta },
-      { rotulo: { pt: '2 · Visita guiada', en: '2 · Guided visit' }, detalhe: { pt: 'Conhecer o território no local', en: 'See the site in person' }, etiqueta: T.meta },
-      { rotulo: { pt: '3 · Data room', en: '3 · Data room' }, detalhe: { pt: 'Documentos e diligência', en: 'Documents and due diligence' }, etiqueta: T.meta },
-      { rotulo: { pt: '4 · Term sheet', en: '4 · Term sheet' }, detalhe: { pt: 'Condições em documento', en: 'Terms in writing' }, etiqueta: T.meta },
-      { rotulo: { pt: '5 · Compromisso', en: '5 · Commitment' }, detalhe: { pt: 'Formalização por marco', en: 'Formalization by milestone' }, etiqueta: T.meta },
+      { rotulo: { pt: '1 · Conversa', en: '1 · Conversation' }, detalhe: { pt: 'Apresentar a tese e tirar dúvidas', en: 'Walk through the thesis and answer questions' } },
+      { rotulo: { pt: '2 · Visita guiada', en: '2 · Guided visit' }, detalhe: { pt: 'Conhecer o território no local', en: 'See the site in person' } },
+      { rotulo: { pt: '3 · Data room', en: '3 · Data room' }, detalhe: { pt: 'Documentos e diligência', en: 'Documents and due diligence' } },
+      { rotulo: { pt: '4 · Term sheet', en: '4 · Term sheet' }, detalhe: { pt: 'Condições em documento', en: 'Terms in writing' } },
+      { rotulo: { pt: '5 · Compromisso', en: '5 · Commitment' }, detalhe: { pt: 'Formalização por marco', en: 'Formalization by milestone' } },
     ],
   },
 ];
