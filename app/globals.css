@@ -1,0 +1,17 @@
+html{scroll-behavior:smooth}
+body{margin:0;background:#F7F7F2}
+a{color:#087E73}
+img,video{max-width:100%}
+@media (max-width:900px){
+  [style*="repeat(12"],[style*="repeat(3,"],[style*="repeat(4,"]{grid-template-columns:1fr!important}
+  [style*="grid-column"]{grid-column:1/-1!important}
+  h1{font-size:42px!important}
+  h2{font-size:30px!important}
+  [style*="min-height: 680px"]{min-height:620px!important}
+  [style*="padding: 96px"]{padding-top:56px!important;padding-bottom:56px!important}
+  header nav{display:none!important}
+}
+@media (max-width:560px){
+  [style*="repeat(2, minmax"]{grid-template-columns:1fr!important}
+  h1{font-size:34px!important}
+}
